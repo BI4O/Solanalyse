@@ -20,7 +20,8 @@ export const character: Character = {
     ...(process.env.OPENROUTER_API_KEY?.trim() ? ['@elizaos/plugin-openrouter'] : []),
 
     // Custom OpenAI plugin (replaces @elizaos/plugin-openai)
-    ...(process.env.OPENAI_API_KEY?.trim() ? ['./plugins/custom-openai'] : []),
+    // 已在 src/index.ts 中直接注册，无需在此处引用
+    // ...(process.env.OPENAI_API_KEY?.trim() ? ['./plugins/custom-openai'] : []),
     ...(process.env.GOOGLE_GENERATIVE_AI_API_KEY?.trim() ? ['@elizaos/plugin-google-genai'] : []),
 
     // Ollama as fallback (only if no main LLM providers are configured)
