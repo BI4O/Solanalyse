@@ -122,3 +122,8 @@ Customize your project by modifying:
 - `src/index.ts` - Main entry point
 - `src/character.ts` - Character definition
 - `src/plugin.ts` - Custom plugin functionality
+- `src/plugins/custom-openai.ts` - Custom OpenAI plugin (fixes 404 errors)
+
+### Custom OpenAI Plugin
+
+This project includes a custom OpenAI plugin that fixes the 404 error issue with the official plugin. See [README-CUSTOM-OPENAI.md](README-CUSTOM-OPENAI.md) for more details.
