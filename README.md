@@ -1,6 +1,6 @@
-# Project Starter
+# Solanalyse
 
-This is the starter template for ElizaOS projects.
+This is an ElizaOS agent project starter with Solana analysis capabilities.
 
 ## Features
 
@@ -10,6 +10,7 @@ This is the starter template for ElizaOS projects.
 - Example service, action, and provider implementations
 - TypeScript configuration for optimal developer experience
 - Built-in documentation and examples
+- Solana blockchain analysis tools
 
 ## Getting Started
 
@@ -120,3 +121,4 @@ Customize your project by modifying:
 
 - `src/index.ts` - Main entry point
 - `src/character.ts` - Character definition
+- `src/plugin.ts` - Custom plugin functionality
