@@ -1,129 +1,190 @@
 # Solanalyse
 
-This is an ElizaOS agent project starter with Solana analysis capabilities.
+**Solanalyse** is an advanced ElizaOS-based AI agent system specialized in Solana blockchain data analysis and news aggregation. This multi-agent platform combines Chinese-language blockchain expertise with robust API integration for comprehensive Solana ecosystem analysis.
 
-## Features
+## ✨ Key Features
 
-- Pre-configured project structure for ElizaOS development
-- Comprehensive testing setup with component and e2e tests
-- Default character configuration with plugin integration
-- Example service, action, and provider implementations
-- TypeScript configuration for optimal developer experience
-- Built-in documentation and examples
-- Solana blockchain analysis tools
+- 🤖 **Multi-Agent Architecture**: Dual agent system with general and specialized Solana experts
+- 🔗 **Custom API Integration**: Fixed OpenAI plugin with 404 error resolution and custom endpoint support
+- 🇨🇳 **Chinese Language Support**: Native Chinese Solana blockchain data specialist
+- 📊 **Real-time Blockchain Analysis**: Token information, address validation, transaction history
+- 🛡️ **Security Analysis**: Token safety checks, holder distribution, risk assessments
+- 📰 **News Aggregation**: Blockchain and cryptocurrency news filtering and analysis
+- 🔧 **Flexible Configuration**: Environment-driven plugin loading and API customization
 
-## Getting Started
-
-```bash
-# Create a new project
-elizaos create --type project my-project
-# Dependencies are automatically installed and built
-
-# Navigate to the project directory
-cd my-project
-
-# Start development immediately
-elizaos dev
-```
-
-## Development
+## 🚀 Quick Start
 
 ```bash
-# Start development with hot-reloading (recommended)
-elizaos dev
+# Clone the repository
+git clone https://github.com/BI4O/Solanalyse.git
+cd Solanalyse
 
-# OR start without hot-reloading
-elizaos start
-# Note: When using 'start', you need to rebuild after changes:
-# bun run build
+# Install dependencies
+bun install
 
-# Test the project
-elizaos test
+# Configure environment variables
+cp .env.example .env
+# Edit .env with your API keys
+
+# Start development server
+bun run dev
 ```
 
-## Testing
+### Required Environment Variables
 
-ElizaOS employs a dual testing strategy:
+```bash
+# OpenAI-compatible API configuration
+OPENAI_API_KEY=your-api-key-here
+OPENAI_BASE_URL=https://apis.iflow.cn/v1
+OPENAI_SMALL_MODEL=qwen3-coder-plus
+OPENAI_LARGE_MODEL=qwen3-coder-plus
 
-1. **Component Tests** (`src/__tests__/*.test.ts`)
-
-   - Run with Bun's native test runner
-   - Fast, isolated tests using mocks
-   - Perfect for TDD and component logic
-
-2. **E2E Tests** (`src/__tests__/e2e/*.e2e.ts`)
-   - Run with ElizaOS custom test runner
-   - Real runtime with actual database (PGLite)
-   - Test complete user scenarios
-
-### Test Structure
-
-```
-src/
-  __tests__/              # All tests live inside src
-    *.test.ts            # Component tests (use Bun test runner)
-    e2e/                 # E2E tests (use ElizaOS test runner)
-      project-starter.e2e.ts  # E2E test suite
-      README.md          # E2E testing documentation
-  index.ts               # Export tests here: tests: [ProjectStarterTestSuite]
+# Database and server
+PGLITE_DATA_DIR=./data/.eliza/
+SERVER_HOST=localhost
+SERVER_PORT=3000
 ```
 
-### Running Tests
+## 🏗️ Architecture
 
-- `elizaos test` - Run all tests (component + e2e)
-- `elizaos test component` - Run only component tests
-- `elizaos test e2e` - Run only E2E tests
+### Multi-Agent System
 
-### Writing Tests
+- **Eliza Agent**: General-purpose AI assistant with broad capabilities
+- **SolanaData Agent**: Specialized Chinese Solana blockchain expert featuring:
+  - Token information queries and analysis
+  - Solana address validation (32-44 character format checking)
+  - Transaction history and account balance queries
+  - Security analysis and risk warnings
+  - PDA (Program Derived Address) explanations
+  - Holder distribution analysis
 
-Component tests use bun:test:
+### Core Components
 
-```typescript
-// Unit test example (__tests__/config.test.ts)
-describe('Configuration', () => {
-  it('should load configuration correctly', () => {
-    expect(config.debug).toBeDefined();
-  });
-});
+- **Custom OpenAI Plugin**: Resolves official plugin 404 errors with enhanced compatibility
+- **Dynamic Plugin Loading**: Environment-based platform integrations (Discord, Twitter, Telegram)
+- **Comprehensive Testing**: Component and E2E test suites with real runtime validation
+- **React Frontend**: Modern web interface for agent interaction
 
-// Integration test example (__tests__/integration.test.ts)
-describe('Integration: Plugin with Character', () => {
-  it('should initialize character with plugins', async () => {
-    // Test interactions between components
-  });
-});
+## 🛠️ Development
+
+```bash
+# Development with hot-reloading
+bun run dev
+
+# Production build
+bun run build
+
+# Start production server
+bun run start
+
+# Testing
+bun run test              # Run all tests
+bun run test:component    # Component tests only
+bun run test:e2e          # E2E tests only
+bun run test:coverage     # With coverage report
+
+# Code quality
+bun run lint              # Format code
+bun run type-check        # Type checking
+bun run check-all         # Run all checks
 ```
 
-E2E tests use ElizaOS test interface:
+## 📋 Available Commands
 
-```typescript
-// E2E test example (e2e/project.test.ts)
-export class ProjectTestSuite implements TestSuite {
-  name = 'project_test_suite';
-  tests = [
-    {
-      name: 'project_initialization',
-      fn: async (runtime) => {
-        // Test project in a real runtime
-      },
-    },
-  ];
-}
+### SolanaData Agent Capabilities
 
-export default new ProjectTestSuite();
+The SolanaData agent can handle queries like:
+
+- **Token Information**: "能帮我查一下这个代币的信息吗? C98"
+- **Address Queries**: "这个地址的余额是多少? 8hoBHQhbknrK8D4g7hGGN3wHnG9WJKB6XMTnS3Q3XV9L"
+- **Technical Concepts**: "能解释一下什么是PDA吗?"
+- **Security Analysis**: "帮我分析一下这个代币的安全性"
+
+### Supported Features
+
+- ✅ Solana address format validation
+- ✅ Token metadata and pricing information
+- ✅ Holder distribution analysis
+- ✅ Security risk assessments
+- ✅ Transaction history queries
+- ✅ Smart contract analysis
+- ✅ Chinese and English language support
+- ✅ Real-time data fetching
+
+## 🔧 Configuration
+
+### Platform Integrations
+
+Optional platform integrations (configure via environment variables):
+
+```bash
+# Discord bot
+DISCORD_API_TOKEN=your-discord-token
+
+# Twitter integration
+TWITTER_API_KEY=your-twitter-key
+TWITTER_API_SECRET_KEY=your-twitter-secret
+TWITTER_ACCESS_TOKEN=your-access-token
+TWITTER_ACCESS_TOKEN_SECRET=your-access-secret
+
+# Telegram bot
+TELEGRAM_BOT_TOKEN=your-telegram-token
 ```
 
-The test utilities in `__tests__/utils/` provide helper functions to simplify writing tests.
+### Custom API Endpoints
 
-## Configuration
+The system supports custom OpenAI-compatible APIs:
 
-Customize your project by modifying:
+```bash
+# Custom endpoint configuration
+OPENAI_BASE_URL=https://your-custom-api.com/v1
+OPENAI_SMALL_MODEL=your-custom-model
+OPENAI_LARGE_MODEL=your-custom-large-model
+```
 
-- `src/index.ts` - Main entry point
-- `src/character.ts` - Character definition
-- `src/plugin.ts` - Custom plugin functionality
-- `src/plugins/custom-openai.ts` - Custom OpenAI plugin (fixes 404 errors)
+## 🧪 Testing
 
-### Custom OpenAI Plugin
+Solanalyse employs a comprehensive dual-testing strategy:
 
-This project includes a custom OpenAI plugin that fixes the 404 error issue with the official plugin. See [README-CUSTOM-OPENAI.md](README-CUSTOM-OPENAI.md) for more details.
+1. **Component Tests**: Fast, isolated tests using Bun's native test runner
+2. **E2E Tests**: Real runtime testing with database integration
+
+```bash
+# Run specific test types
+elizaos test component    # Component tests only
+elizaos test e2e          # E2E tests only
+
+# Test with coverage
+bun run test:coverage
+```
+
+## 📚 Documentation
+
+- **[CLAUDE.md](./CLAUDE.md)**: Development guidance for Claude Code
+- **[references/](./references/)**: API documentation and plugin development guides
+  - ElizaOS plugin creation guide
+  - GeckoTerminal API documentation
+  - SoSoValue API references
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Commit your changes: `git commit -m 'Add amazing feature'`
+4. Push to the branch: `git push origin feature/amazing-feature`
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the repository for details.
+
+## 🔗 Related Projects
+
+- [ElizaOS](https://elizaos.ai/) - The underlying AI agent framework
+- [Solana](https://solana.com/) - High-performance blockchain platform
+- [GeckoTerminal](https://www.geckoterminal.com/) - Token data and analytics
+- [SoSoValue](https://www.sosovalue.com/) - Crypto data and news platform
+
+---
+
+**Built with ❤️ for the Solana ecosystem**

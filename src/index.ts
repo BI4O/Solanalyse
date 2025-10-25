@@ -5,6 +5,8 @@ import { character } from './character.ts';
 import customOpenAIPlugin from './plugins/custom-openai.ts';
 // Import SolanaData character
 import { solanaDataCharacter } from './characters/SolanaData.ts';
+// Import SoSoValue news plugin
+import sosoNewsPlugin from './plugins/soso-news.ts';
 
 const initCharacter = ({ runtime }: { runtime: IAgentRuntime }) => {
   logger.info('Initializing character');
@@ -25,7 +27,7 @@ export const projectAgent: ProjectAgent = {
 export const solanaDataAgent: ProjectAgent = {
   character: solanaDataCharacter,
   init: async (runtime: IAgentRuntime) => await initSolanaDataCharacter({ runtime }),
-  plugins: [starterPlugin, customOpenAIPlugin],
+  plugins: [starterPlugin, customOpenAIPlugin, sosoNewsPlugin],
 };
 
 const project: Project = {

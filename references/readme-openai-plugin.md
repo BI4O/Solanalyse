@@ -37,7 +37,7 @@ Error     OpenAI API error: 404 -
 2. **创建测试文件**
    ```bash
    # 创建测试文件验证 API 兼容性
-   node test-openai-plugin.js
+   node references/test-openai-plugin.js
    ```
 
 ### 第二步：ESM 版本改造
@@ -96,7 +96,7 @@ const usage = data.usage;
 
 使用整合测试文件验证改造效果：
 ```bash
-node test-openai-plugin.js
+node references/test-openai-plugin.js
 ```
 
 ## 📊 改造代码对比
@@ -249,7 +249,7 @@ OPENAI_LARGE_MODEL=qwen3-coder-plus
 ### 2. 测试验证
 ```bash
 # 运行完整测试套件
-node test-openai-plugin.js
+node references/test-openai-plugin.js
 
 # 启动 ElizaOS 服务
 bun run dev
@@ -268,10 +268,11 @@ bun run dev
 - `node_modules/@elizaos/plugin-openai/dist/cjs/index.node.cjs.backup` (备份文件)
 
 ### 测试文件
-- `test-openai-plugin.js` (整合测试套件)
+- `test-openai-plugin.js` (整合测试套件) - 位于 references/ 目录
 
 ### 文档文件
 - `readme-openai-plugin.md` (本文档)
+- `openai-plugin-guide.md` (自定义 OpenAI 插件指南)
 
 ## 🔮 未来改进
 
@@ -291,7 +292,7 @@ bun run dev
 
 如果需要在新环境中应用此改造：
 
-1. 复制 `test-openai-plugin.js` 到项目根目录
+1. 复制 `references/test-openai-plugin.js` 到项目根目录
 2. 运行测试确认问题存在
 3. 按照本文档步骤进行改造
 4. 使用测试文件验证改造效果
