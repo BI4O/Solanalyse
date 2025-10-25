@@ -41,7 +41,7 @@ src/
 ├── index.ts              # Main entry point - exports multiple agents
 ├── character.ts          # Default "Eliza" character
 ├── characters/
-│   └── SolanaData.ts     # Solana blockchain data specialist agent
+│   └── SoSoNews.ts     # Cryptocurrency news and market insights specialist agent
 ├── plugins/
 │   └── custom-openai.ts  # Custom OpenAI plugin with 404 error fixes
 ├── plugin.ts             # Default starter plugin
@@ -53,15 +53,15 @@ src/
 
 **1. Multi-Agent Architecture** (`src/index.ts`)
 - **projectAgent**: Default "Eliza" character with general capabilities
-- **solanaDataAgent**: Specialized Solana blockchain data expert
+- **soSoNewsAgent**: Specialized cryptocurrency news and market insights expert
 - Both agents share the same plugin ecosystem but have different personalities
 
-**2. SolanaData Character** (`src/characters/SolanaData.ts`)
-- Chinese-speaking Solana blockchain specialist
-- Handles token information queries, address validation, transaction history
-- Validates Solana address formats (32-44 chars, specific character sets)
-- Provides security analysis and risk warnings
-- Topics include: token data, holder analysis, PDA explanations, rent/fees
+**2. SoSoNews Character** (`src/characters/SoSoNews.ts`)
+- Chinese-speaking cryptocurrency news and market insights specialist
+- Handles cryptocurrency news queries, market analysis, token tracking
+- Processes news from SoSoValue API with intelligent categorization
+- Provides market sentiment analysis and industry insights
+- Topics include: cryptocurrency news, market analysis, price movements, defi trends
 
 **3. Custom OpenAI Plugin** (`src/plugins/custom-openai.ts`)
 - **Purpose**: Fixes 404 errors from official @elizaos/plugin-openai
@@ -119,7 +119,7 @@ IGNORE_BOOTSTRAP=  # Set to disable bootstrap plugin
 
 1. **Quick Start**: `bun run dev` - starts agents with hot-reloading
 2. **Agent Selection**: Agents are available via the web UI at localhost:3000
-3. **Character Customization**: Modify `src/characters/SolanaData.ts` for blockchain expert behavior
+3. **Character Customization**: Modify `src/characters/SoSoNews.ts` for cryptocurrency news expert behavior
 4. **Plugin Development**: Extend existing plugins or create new ones following ElizaOS patterns
 5. **Testing**: Write tests in `src/__tests__/` and export from `src/index.ts`
 6. **API Integration**: Configure custom OpenAI-compatible endpoints in environment
@@ -129,8 +129,8 @@ IGNORE_BOOTSTRAP=  # Set to disable bootstrap plugin
 - **Package Manager**: Always use `bun` (not npm or pnpm)
 - **Custom OpenAI Plugin**: This project uses a custom OpenAI plugin to fix 404 errors - do not replace with official plugin
 - **Multi-Agent**: Both agents share plugins but maintain separate personalities and capabilities
-- **Chinese Language**: SolanaData agent primarily speaks Chinese and handles Chinese blockchain terminology
-- **Solana Specialization**: The system is optimized for Solana blockchain queries and data analysis
+- **Chinese Language**: SoSoNews agent primarily speaks Chinese and handles Chinese cryptocurrency terminology
+- **News Specialization**: The system is optimized for cryptocurrency news queries and market analysis
 - **Database**: Uses PGLite (PostgreSQL-compatible) for data persistence
 - **Hot Reloading**: Available in dev mode for rapid iteration
 - 到了要验证阶段，不要帮我启动elizaos dev，提醒我自己去启动来验证就可以

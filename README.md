@@ -1,15 +1,15 @@
 # Solanalyse
 
-**Solanalyse** is an advanced ElizaOS-based AI agent system specialized in Solana blockchain data analysis and news aggregation. This multi-agent platform combines Chinese-language blockchain expertise with robust API integration for comprehensive Solana ecosystem analysis.
+**Solanalyse** is an advanced ElizaOS-based AI agent system specialized in cryptocurrency news aggregation and market insights. This multi-agent platform combines Chinese-language financial expertise with robust API integration for comprehensive cryptocurrency market analysis.
 
 ## ✨ Key Features
 
-- 🤖 **Multi-Agent Architecture**: Dual agent system with general and specialized Solana experts
+- 🤖 **Multi-Agent Architecture**: Dual agent system with general and specialized cryptocurrency news experts
 - 🔗 **Custom API Integration**: Fixed OpenAI plugin with 404 error resolution and custom endpoint support
-- 🇨🇳 **Chinese Language Support**: Native Chinese Solana blockchain data specialist
-- 📊 **Real-time Blockchain Analysis**: Token information, address validation, transaction history
-- 🛡️ **Security Analysis**: Token safety checks, holder distribution, risk assessments
-- 📰 **News Aggregation**: Blockchain and cryptocurrency news filtering and analysis
+- 🇨🇳 **Chinese Language Support**: Native Chinese cryptocurrency news and market insights specialist
+- 📊 **Real-time Market Analysis**: Token information, price tracking, market sentiment analysis
+- 📰 **News Aggregation**: Comprehensive cryptocurrency news filtering and intelligent categorization
+- 🎯 **Smart News Categorization**: Exclusive, related, and other blockchain news classification
 - 🔧 **Flexible Configuration**: Environment-driven plugin loading and API customization
 
 ## 🚀 Quick Start
