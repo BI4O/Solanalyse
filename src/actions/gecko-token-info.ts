@@ -9,6 +9,20 @@ import {
 } from "@elizaos/core";
 import { z } from "zod";
 
+// 紧凑版 Markdown 生成模板（不含 HTML）
+function shortAddr(addr: string): string {
+  if (!addr) return '—';
+  return `\`${addr.slice(0,6)}...${addr.slice(-4)}\``;
+}
+// 短进度条，适合紧凑布局
+function progressBar(percent: number, len: number = 6): string {
+  if (percent == null) return '`—`';
+  const p = Math.max(0, Math.min(100, Math.round(percent)));
+  const filled = '█'.repeat(Math.round((p/100)*len));
+  const empty = '─'.repeat(len - filled.length);
+  return `\`${filled}${empty}\` ${p}%`;
+}
+
 // GeckoTerminal API 数据模型
 interface GeckoImage {
   thumb: string;
@@ -62,7 +76,7 @@ interface GeckoTokenAttributes {
   mint_authority: string;
   freeze_authority: string;
   is_honeypot: string;
-  launchpad_details: GeckoLaunchpadDetails;
+  launchpad_details?: GeckoLaunchpadDetails; // 只有这个字段可选
 }
 
 interface GeckoTokenData {
@@ -182,52 +196,48 @@ export const tokenInfoAction: Action = {
       const data: GeckoTokenInfoResponse = await response.json();
       const token = data.data.attributes;
 
-      // 格式化返回信息
-      const formattedInfo = `
-💎 **代币详细信息**
 
-**基本信息:**
-🏷️ 名称: ${token.name}
-🔤 符号: ${token.symbol}
-📍 地址: \`${token.address}\`
-🔢 精度: ${token.decimals}
+      let formattedInfo = `## 🪙 ${token.name || 'Unknown'}${token.symbol ? ` (${token.symbol})` : ''} — ${shortAddr(token.address)}
 
-**评分指标:**
-⭐ GT评分: ${token.gt_score.toFixed(2)}
-📊 评分详情:
-  • 流动性: ${token.gt_score_details.pool}
-  • 交易: ${token.gt_score_details.transaction}
-  • 创建: ${token.gt_score_details.creation}
-  • 信息: ${token.gt_score_details.info}
+**GT:** ⭐ ${token.gt_score != null ? token.gt_score.toFixed(1) : '—'}  •  **持有:** ${token.holders?.count != null ? token.holders.count.toLocaleString() : '—'}
+**安全:** ${token.is_honeypot === 'yes' ? '🚨 蜜罐' : token.is_honeypot === 'no' ? '✅ 安全' : '⚠️ 未知'}`;
 
-**持有者信息:**
-👥 持有者数量: ${token.holders.count.toLocaleString()}
-📈 分布情况:
-  • 前10%: ${token.holders.distribution_percentage.top_10}%
-  • 11-20%: ${token.holders.distribution_percentage["11_20"]}%
-  • 21-40%: ${token.holders.distribution_percentage["21_40"]}%
-  • 其他: ${token.holders.distribution_percentage.rest}%
+      formattedInfo += `
 
-**安全设置:**
-🔒 Mint权限: ${token.mint_authority}
-🧊 Freeze权限: ${token.freeze_authority}
-🚨 蜜罐检测: ${token.is_honeypot}
+**指标:** ${token.gt_score_details?.pool != null ? progressBar(token.gt_score_details.pool) : '`—`'} 流动性 · ${token.gt_score_details?.transaction != null ? progressBar(token.gt_score_details.transaction) : '`—`'} 活跃度`;
 
-**分类标签:**
-📂 ${token.categories.length > 0 ? token.categories.join(", ") : "无分类"}
+      // 分类/社媒 单行显示（存在则显示）
+      const cats = Array.isArray(token.categories) && token.categories.length ? token.categories.map(c => `\`${c}\``).join(' ') : '';
+      const socials = [
+        token.telegram_handle ? `TG:${token.telegram_handle}` : null,
+        token.twitter_handle ? `TW:${token.twitter_handle}` : null,
+        token.discord_url ? `DC` : null
+      ].filter(Boolean).join(' · ');
 
-**启动台信息:**
-🎓 毕业进度: ${token.launchpad_details.graduation_percentage}%
-✅ 已完成: ${token.launchpad_details.completed ? "是" : "否"}
-${token.launchpad_details.completed ? `📅 完成时间: ${new Date(token.launchpad_details.completed_at).toLocaleString()}` : ""}
+      if (cats) formattedInfo += `\n\n**分类:** ${cats}`;
+      if (socials) formattedInfo += `\n**社媒:** ${socials}`;
 
-**社交媒体:**
-${token.discord_url ? `💬 Discord: ${token.discord_url}` : "💬 Discord: 无"}
-${token.telegram_handle ? `📱 Telegram: ${token.telegram_handle}` : "📱 Telegram: 无"}
-${token.twitter_handle ? `🐦 Twitter: ${token.twitter_handle}` : "🐦 Twitter: 无"}
+      // 折叠部分（保留但紧凑）
+      formattedInfo += `
 
-${token.description ? `📝 描述: ${token.description}` : "📝 描述: 无"}
-      `.trim();
+<details><summary>更多 ▸</summary>
+
+- 创建: ${token.gt_score_details?.creation != null ? token.gt_score_details.creation + '%' : '—'}  ·  信息: ${token.gt_score_details?.info != null ? token.gt_score_details.info + '%' : '—'}
+- Top10%: ${token.holders?.distribution_percentage?.top_10 ?? '—'}%  ·  11-20%: ${token.holders?.distribution_percentage?.["11_20"] ?? '—'}%  ·  其他: ${token.holders?.distribution_percentage?.rest ?? '—'}%
+- 精度: ${token.decimals ?? '—'}  ·  Mint: ${token.mint_authority === 'yes' ? '❌ 有' : token.mint_authority === 'no' ? '✅ 无' : '—'}  ·  Freeze: ${token.freeze_authority === 'yes' ? '❌ 有' : token.freeze_authority === 'no' ? '✅ 无' : '—'}
+${token.launchpad_details ? `- 启动台毕业: ${token.launchpad_details.graduation_percentage ?? '—'}%` : ''}
+
+</details>`;
+
+      // 描述（如存在，截断成一行）
+      if (token.description) {
+        const desc = token.description.replace(/\s+/g,' ').trim();
+        formattedInfo += `
+
+**描述:** ${desc.length > 180 ? desc.slice(0,180) + '...' : desc}`;
+      }
+
+      formattedInfo = formattedInfo.trim();
 
       if (callback) {
         callback({

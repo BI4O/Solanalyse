@@ -83,6 +83,16 @@ async function generateObjectByModelType(
     }
 
     const data = await response.json();
+
+    // 检查响应数据格式
+    if (!data.choices || !Array.isArray(data.choices) || data.choices.length === 0) {
+      throw new Error(`Invalid API response: missing or empty choices array. Response: ${JSON.stringify(data)}`);
+    }
+
+    if (!data.choices[0].message || !data.choices[0].message.content) {
+      throw new Error(`Invalid API response: missing message content in choice[0]. Response: ${JSON.stringify(data)}`);
+    }
+
     const object = JSON.parse(data.choices[0].message.content);
     const usage = data.usage;
 
@@ -183,7 +193,19 @@ const customOpenAIPlugin: Plugin = {
       }
 
       const data = await response.json();
-      const openaiResponse = data.choices[0]?.message?.content || "";
+
+      // 检查响应数据格式
+      if (!data.choices || !Array.isArray(data.choices) || data.choices.length === 0) {
+        logger.error(`[CustomOpenAI] Invalid API response: missing or empty choices array. Response: ${JSON.stringify(data)}`);
+        throw new Error(`Invalid API response: missing or empty choices array. Response: ${JSON.stringify(data)}`);
+      }
+
+      if (!data.choices[0].message || !data.choices[0].message.content) {
+        logger.error(`[CustomOpenAI] Invalid API response: missing message content in choice[0]. Response: ${JSON.stringify(data)}`);
+        throw new Error(`Invalid API response: missing message content in choice[0]. Response: ${JSON.stringify(data)}`);
+      }
+
+      const openaiResponse = data.choices[0].message.content;
       const usage = data.usage;
 
       if (usage) {
@@ -235,7 +257,19 @@ const customOpenAIPlugin: Plugin = {
       }
 
       const data = await response.json();
-      const openaiResponse = data.choices[0]?.message?.content || "";
+
+      // 检查响应数据格式
+      if (!data.choices || !Array.isArray(data.choices) || data.choices.length === 0) {
+        logger.error(`[CustomOpenAI] Invalid API response: missing or empty choices array. Response: ${JSON.stringify(data)}`);
+        throw new Error(`Invalid API response: missing or empty choices array. Response: ${JSON.stringify(data)}`);
+      }
+
+      if (!data.choices[0].message || !data.choices[0].message.content) {
+        logger.error(`[CustomOpenAI] Invalid API response: missing message content in choice[0]. Response: ${JSON.stringify(data)}`);
+        throw new Error(`Invalid API response: missing message content in choice[0]. Response: ${JSON.stringify(data)}`);
+      }
+
+      const openaiResponse = data.choices[0].message.content;
       const usage = data.usage;
 
       if (usage) {
@@ -295,6 +329,20 @@ const customOpenAIPlugin: Plugin = {
         }
 
         const data = await response.json();
+
+        // 检查嵌入响应数据格式
+        if (!data.data || !Array.isArray(data.data) || data.data.length === 0) {
+          logger.warn(`[CustomOpenAI] Invalid embedding response: missing or empty data array. Response: ${JSON.stringify(data)}`);
+          // 返回一个模拟的嵌入向量
+          return new Array(1536).fill(0);
+        }
+
+        if (!data.data[0].embedding) {
+          logger.warn(`[CustomOpenAI] Invalid embedding response: missing embedding in data[0]. Response: ${JSON.stringify(data)}`);
+          // 返回一个模拟的嵌入向量
+          return new Array(1536).fill(0);
+        }
+
         const embedding = data.data[0].embedding;
         const usage = data.usage;
 

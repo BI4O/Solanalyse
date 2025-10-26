@@ -188,13 +188,17 @@ class SosoValueClient {
   }
 }
 
-// 工具函数：格式化新闻输出
+// 工具函数：格式化新闻输出（Markdown表格形式）
 function formatNewsOutput(news: SosoNewsItem[], currency: SosoCurrency): string {
   if (news.length === 0) {
     return `📰 暂时没有找到 ${currency.fullName} (${currency.currencyName}) 的相关新闻。`;
   }
 
-  let output = `📈 ${currency.fullName} (${currency.currencyName.toUpperCase()}) 最新资讯：\n\n`;
+  let output = `## 📈 ${currency.fullName} (${currency.currencyName.toUpperCase()}) 最新资讯\n\n`;
+
+  // 创建表格头部
+  output += `| 序号 | 标题 | 日期 | 类型 | 作者 | 标签 |\n`;
+  output += `|------|------|------|------|------|------|\n`;
 
   news.forEach((item, index) => {
     const englishContent = item.multilanguageContent.find(
@@ -226,18 +230,23 @@ function formatNewsOutput(news: SosoNewsItem[], currency: SosoCurrency): string 
         title = "无标题";
       }
 
-      output += `${index + 1}. **${title}**\n`;
-      output += `   📅 ${publishDate} | 📁 ${categoryName}\n`;
-
-      if (item.author) {
-        output += `   👤 ${item.author}\n`;
+      // 限制标题长度以保持表格整洁
+      if (title.length > 30) {
+        title = title.substring(0, 30) + "...";
       }
 
-      if (item.tags && item.tags.length > 0) {
-        output += `   🏷️ ${item.tags.join(", ")}\n`;
-      }
+      // 处理作者信息
+      let author = item.author || "—";
 
-      output += `   🔗 [查看原文](${item.sourceLink})\n\n`;
+      // 处理标签信息
+      let tags = item.tags && item.tags.length > 0 ? item.tags.join(", ") : "—";
+
+      // 转义Markdown特殊字符
+      title = title.replace(/\|/g, "\\|").replace(/\n/g, " ");
+      author = author.replace(/\|/g, "\\|").replace(/\n/g, " ");
+      tags = tags.replace(/\|/g, "\\|").replace(/\n/g, " ");
+
+      output += `| ${index + 1} | [${title}](${item.sourceLink}) | ${publishDate} | ${categoryName} | ${author} | ${tags} |\n`;
     }
   });
 
@@ -293,7 +302,7 @@ const searchTokenIdAction: Action = {
       const baseUrl = runtime.getSetting("SOSO_BASE_URL") || "https://openapi.sosovalue.com";
 
       const client = new SosoValueClient(apiKey, baseUrl);
-      const text = message.content.text;
+      const text = message.content.text || "";
 
       // 提取代币名称
       const tokenPatterns = [
@@ -448,19 +457,62 @@ const getTokenNewsAction: Action = {
 
     // 验证是否包含新闻查询意图
     const text = message.content.text.toLowerCase();
+
+    // 更全面的新闻关键词列表
     const newsKeywords = [
-      "新闻", "资讯", "消息", "动态", "最新", "news", "update", "latest",
-      "what", "how", "怎么样", "如何", "什么", "最新情况"
+      "新闻", "资讯", "消息", "动态", "最新", "news", "update", "latest", "recent", "headlines",
+      "条新闻", "条资讯", "有什么", "如何", "怎么样", "最新情况", "updates", "articles", "stories"
     ];
 
-    // 同时检查是否包含代币名称
+    // 扩展的代币关键词列表
     const tokenKeywords = [
       "bitcoin", "btc", "ethereum", "eth", "solana", "sol", "dogecoin", "doge",
-      "ada", "cardano", "dot", "polkadot", "bnb", "binance", "usdt", "tether"
+      "ada", "cardano", "dot", "polkadot", "bnb", "binance", "usdt", "tether",
+      "usdc", "circle", "xrp", "ripple", "matic", "polygon", "link", "chainlink",
+      "uni", "uniswap", "ltc", "litecoin", "bch", "bitcoincash", "trx", "tron",
+      "avax", "avalanche", "atom", "cosmos", "near", "fil", "filecoin", "algo", "algorand"
     ];
 
-    return newsKeywords.some(keyword => text.includes(keyword)) ||
-           tokenKeywords.some(keyword => text.includes(keyword));
+    // 检查是否包含新闻关键词
+    const hasNewsKeyword = newsKeywords.some(keyword => text.includes(keyword));
+
+    // 检查是否包含代币关键词
+    const hasTokenKeyword = tokenKeywords.some(keyword => text.includes(keyword));
+
+    // 检查是否匹配代币符号模式
+    const hasTokenSymbol = /[a-z]{2,10}/i.test(text);
+
+    // 更智能的新闻意图检测
+    const newsIntentPatterns = [
+      /获取最新的.*新闻/,
+      /.*的最新新闻/,
+      /.*有什么新闻/,
+      /.*最近怎么样/,
+      /.*最新动态/,
+      /.*资讯/,
+      /.*消息/,
+      /.*updates?/,
+      /.*news/,
+      /.*headlines/,
+      /.*stories/,
+      /.*articles/,
+      /what.*happening.*with/,
+      /how.*is.*doing/,
+      /latest.*news.*for/
+    ];
+
+    const hasNewsIntent = newsIntentPatterns.some(pattern => pattern.test(text));
+
+    // 如果有明确的新闻意图，直接返回true
+    if (hasNewsIntent) return true;
+
+    // 如果包含新闻关键词并且包含代币相关信息，返回true
+    if (hasNewsKeyword && (hasTokenKeyword || hasTokenSymbol)) return true;
+
+    // 如果包含"条新闻"等特定组合词，返回true
+    if (text.includes("条新闻") || text.includes("条资讯")) return true;
+
+    return hasNewsKeyword && (hasTokenKeyword || hasTokenSymbol);
   },
 
   handler: async (
@@ -476,7 +528,7 @@ const getTokenNewsAction: Action = {
       const baseUrl = runtime.getSetting("SOSO_BASE_URL") || "https://openapi.sosovalue.com";
 
       const client = new SosoValueClient(apiKey, baseUrl);
-      const text = message.content.text;
+      const text = message.content.text || "";
 
       // 提取代币名称（与搜索 Action 相同的逻辑）
       const tokenPatterns = [
@@ -571,7 +623,7 @@ const getTokenNewsAction: Action = {
       {
         name: "{{name2}}",
         content: {
-          text: "📈 Bitcoin (BTC) 最新资讯：\n\n1. **比特币ETF获批**\n   📅 2024-10-25 | 📁 新闻\n   👤 Reuters\n   🏷️ ETF, SEC, 批准\n   🔗 [查看原文](https://example.com)\n",
+          text: "## 📈 Bitcoin (BTC) 最新资讯\n\n| 序号 | 标题 | 日期 | 类型 | 作者 | 标签 |\n|------|------|------|------|------|------|\n| 1 | [比特币ETF获批](https://example.com) | 2024-10-25 | 新闻 | Reuters | ETF, SEC, 批准 |",
           actions: ["GET_TOKEN_NEWS"],
         },
       },
@@ -586,7 +638,37 @@ const getTokenNewsAction: Action = {
       {
         name: "{{name2}}",
         content: {
-          text: "📈 Solana (sol) 最新资讯：\n\n1. **Solana网络升级成功**\n   📅 2024-10-24 | 📁 技术更新\n   👤 Solana Foundation\n   🔗 [查看原文](https://example.com)\n",
+          text: "## 📈 Solana (sol) 最新资讯\n\n| 序号 | 标题 | 日期 | 类型 | 作者 | 标签 |\n|------|------|------|------|------|------|\n| 1 | [Solana网络升级成功](https://example.com) | 2024-10-24 | 技术更新 | Solana Foundation | — |",
+          actions: ["GET_TOKEN_NEWS"],
+        },
+      },
+    ],
+    [
+      {
+        name: "{{name1}}",
+        content: {
+          text: "获取最新的Solana新闻",
+        },
+      },
+      {
+        name: "{{name2}}",
+        content: {
+          text: "## 📈 Solana (sol) 最新资讯\n\n| 序号 | 标题 | 日期 | 类型 | 作者 | 标签 |\n|------|------|------|------|------|------|\n| 1 | [Solana生态项目突破](https://example.com) | 2024-10-25 | 新闻 | Solana News | 生态, 项目 |",
+          actions: ["GET_TOKEN_NEWS"],
+        },
+      },
+    ],
+    [
+      {
+        name: "{{name1}}",
+        content: {
+          text: "Solana的最新动态",
+        },
+      },
+      {
+        name: "{{name2}}",
+        content: {
+          text: "## 📈 Solana (sol) 最新资讯\n\n| 序号 | 标题 | 日期 | 类型 | 作者 | 标签 |\n|------|------|------|------|------|------|\n| 1 | [Solana主网稳定运行](https://example.com) | 2024-10-25 | 技术更新 | Solana Team | 网络, 稳定性 |",
           actions: ["GET_TOKEN_NEWS"],
         },
       },

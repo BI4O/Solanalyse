@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, mock } from "bun:test";
+import { describe, it, expect, beforeAll, afterAll, mock } from "bun:test";
 import { searchTokenIdAction, getTokenNewsAction } from "../actions/get-news";
 import { createMockRuntime, createMockMessage, setupLoggerSpies } from "./test-utils";
 

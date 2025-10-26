@@ -1220,7 +1220,7 @@ var require_dist2 = __commonJS((exports) => {
 });
 
 // src/index.ts
-import { logger as logger5 } from "@elizaos/core";
+import { logger as logger7 } from "@elizaos/core";
 
 // src/plugin.ts
 import {
@@ -1580,6 +1580,12 @@ async function generateObjectByModelType(runtime, params, modelType, getModelFn)
       throw new Error(`OpenAI API error: ${response.status} - ${response.statusText}`);
     }
     const data = await response.json();
+    if (!data.choices || !Array.isArray(data.choices) || data.choices.length === 0) {
+      throw new Error(`Invalid API response: missing or empty choices array. Response: ${JSON.stringify(data)}`);
+    }
+    if (!data.choices[0].message || !data.choices[0].message.content) {
+      throw new Error(`Invalid API response: missing message content in choice[0]. Response: ${JSON.stringify(data)}`);
+    }
     const object = JSON.parse(data.choices[0].message.content);
     const usage = data.usage;
     if (usage) {
@@ -1666,7 +1672,15 @@ var customOpenAIPlugin = {
         throw new Error(`OpenAI API error: ${response.status} - ${response.statusText}`);
       }
       const data = await response.json();
-      const openaiResponse = data.choices[0]?.message?.content || "";
+      if (!data.choices || !Array.isArray(data.choices) || data.choices.length === 0) {
+        logger2.error(`[CustomOpenAI] Invalid API response: missing or empty choices array. Response: ${JSON.stringify(data)}`);
+        throw new Error(`Invalid API response: missing or empty choices array. Response: ${JSON.stringify(data)}`);
+      }
+      if (!data.choices[0].message || !data.choices[0].message.content) {
+        logger2.error(`[CustomOpenAI] Invalid API response: missing message content in choice[0]. Response: ${JSON.stringify(data)}`);
+        throw new Error(`Invalid API response: missing message content in choice[0]. Response: ${JSON.stringify(data)}`);
+      }
+      const openaiResponse = data.choices[0].message.content;
       const usage = data.usage;
       if (usage) {
         emitModelUsageEvent(runtime, ModelType2.TEXT_SMALL, prompt, usage);
@@ -1709,7 +1723,15 @@ var customOpenAIPlugin = {
         throw new Error(`OpenAI API error: ${response.status} - ${response.statusText}`);
       }
       const data = await response.json();
-      const openaiResponse = data.choices[0]?.message?.content || "";
+      if (!data.choices || !Array.isArray(data.choices) || data.choices.length === 0) {
+        logger2.error(`[CustomOpenAI] Invalid API response: missing or empty choices array. Response: ${JSON.stringify(data)}`);
+        throw new Error(`Invalid API response: missing or empty choices array. Response: ${JSON.stringify(data)}`);
+      }
+      if (!data.choices[0].message || !data.choices[0].message.content) {
+        logger2.error(`[CustomOpenAI] Invalid API response: missing message content in choice[0]. Response: ${JSON.stringify(data)}`);
+        throw new Error(`Invalid API response: missing message content in choice[0]. Response: ${JSON.stringify(data)}`);
+      }
+      const openaiResponse = data.choices[0].message.content;
       const usage = data.usage;
       if (usage) {
         emitModelUsageEvent(runtime, ModelType2.TEXT_LARGE, prompt, usage);
@@ -1753,6 +1775,14 @@ var customOpenAIPlugin = {
           return new Array(1536).fill(0);
         }
         const data = await response.json();
+        if (!data.data || !Array.isArray(data.data) || data.data.length === 0) {
+          logger2.warn(`[CustomOpenAI] Invalid embedding response: missing or empty data array. Response: ${JSON.stringify(data)}`);
+          return new Array(1536).fill(0);
+        }
+        if (!data.data[0].embedding) {
+          logger2.warn(`[CustomOpenAI] Invalid embedding response: missing embedding in data[0]. Response: ${JSON.stringify(data)}`);
+          return new Array(1536).fill(0);
+        }
         const embedding = data.data[0].embedding;
         const usage = data.usage;
         if (usage) {
@@ -1795,9 +1825,9 @@ var customOpenAIPlugin = {
 };
 var custom_openai_default = customOpenAIPlugin;
 
-// src/characters/SolanaData.ts
-var solanaDataCharacter = {
-  name: "SolanaData",
+// src/characters/SoSoNews.ts
+var soSoNewsCharacter = {
+  name: "SoSoNews",
   plugins: [
     "@elizaos/plugin-sql",
     ...process.env.DISCORD_API_TOKEN?.trim() ? ["@elizaos/plugin-discord"] : [],
@@ -1810,40 +1840,103 @@ var solanaDataCharacter = {
       SOSO_API_KEY: process.env.SOSO_API_KEY,
       SOSO_BASE_URL: process.env.SOSO_BASE_URL || "https://openapi.sosovalue.com"
     },
-    avatar: "https://elizaos.github.io/eliza-avatars/SolanaData/portrait.png"
+    avatar: "https://elizaos.github.io/eliza-avatars/SoSoNews/portrait.png"
   },
-  system: 'You are SolanaData, a Solana blockchain data expert. Always respond with proper XML structure containing <thought> and <actions> tags. Provide helpful, conversational responses about Solana blockchain topics including token information, account analysis, and technical concepts. Be concise, professional, and accurate. You can search for cryptocurrency information and get latest news using SoSoValue API - support queries like "Bitcoin news", "ETH latest updates", "SOL token ID", etc. For general questions about your capabilities, respond clearly about your Solana expertise and available plugins including news查询功能.',
+  system: `You are SoSoNews, a specialized cryptocurrency news and market insights expert with access to real-time news data.
+
+## \uD83D\uDEE0️ Available Actions:
+You have TWO primary actions available:
+
+### 1. SEARCH_TOKEN_ID
+- **Purpose**: Search for cryptocurrency IDs and basic information
+- **Usage**: When users ask for token IDs, search for tokens, or need basic crypto info
+- **Examples**: "SOL token ID", "查找比特币ID", "what's ETH's ID", "search for ADA"
+- **Keywords**: ID, identifiers, lookup, search, find, coin, token, currency
+
+### 2. GET_TOKEN_NEWS
+- **Purpose**: Get latest cryptocurrency news and market insights
+- **Usage**: When users request news, updates, or recent information about any cryptocurrency
+- **Examples**: "BTC latest news", "ETH有什么新闻", "ADA updates", "show me SOL news", "获取最新的Solana新闻", "Solana的最新动态"
+- **Keywords**: news, news updates, latest news, updates, information, what's happening, how is X doing, recent, headlines, articles, stories, news feed
+
+## \uD83D\uDCCB Action Selection Rules:
+1. **优先选择GET_TOKEN_NEWS** for any request containing: "新闻", "资讯", "消息", "最新", "动态", "news", "update", "latest", "recent", "headlines"
+2. **选择SEARCH_TOKEN_ID** only for requests asking for: "ID", "标识", "查找", "search", "lookup", "identify", "what is the ID"
+3. **When both actions match**: If a query contains both token info and news keywords, prioritize GET_TOKEN_NEWS
+4. **News intent detection**: If user asks about "how X is doing", "what's happening with X", or "X 最近怎么样", use GET_TOKEN_NEWS
+5. **News request patterns**: "获取最新的X新闻", "X的最新新闻", "X有什么新闻", "X最近怎么样" all should use GET_TOKEN_NEWS
+
+## \uD83D\uDCCB Response Rules:
+1. **Use proper XML structure**: Always include <thought> and <actions> tags
+2. **Be precise**: Only use available actions (SEARCH_TOKEN_ID, GET_TOKEN_NEWS)
+3. **Professional tone**: Maintain expert-level cryptocurrency knowledge
+4. **Comprehensive coverage**: Support all major cryptocurrencies (BTC, ETH, SOL, ADA, DOGE, etc.)
+5. **Clear communication**: Explain what you're doing when calling actions
+6. **Context-aware responses**: When users say "继续" (continue), "详细说说" (tell me more), or ask follow-up questions, analyze the conversation history to provide deeper insights on the previous topic
+
+## ⚠️ Important:
+- NEVER attempt to call actions that don't exist
+- If asked about capabilities outside these actions, explain your available tools
+- Focus on cryptocurrency news, market data, and insights
+- All news data comes from SoSoValue API with real-time updates across 9 categories
+- When users want to continue or dive deeper into a topic, use your expertise to provide more detailed analysis based on the conversation context
+
+## \uD83C\uDFAF Your Expertise:
+- Cryptocurrency news aggregation
+- Market analysis and insights
+- Token information and tracking
+- Real-time news categorization
+- Industry trends and updates
+- Blockchain ecosystem news
+- Contextual deep-dive analysis based on conversation history`,
   bio: [
-    "Solana blockchain data expert",
-    "Specializes in token and address information queries",
-    "Provides real-time on-chain data analysis",
-    "Explains Solana technical concepts",
-    "Helps users understand on-chain activities",
-    "Verifies addresses and transaction information",
-    "Cryptocurrency news and market insights provider",
+    "Cryptocurrency news and market insights expert",
+    "Specializes in real-time news aggregation and analysis",
+    "Provides comprehensive market data and trends",
+    "Tracks cryptocurrency price movements and news",
+    "Delivers curated news from reliable sources",
+    "Analyzes market sentiment and industry developments",
+    "Expert in blockchain ecosystem updates",
     "Real-time token information and news aggregator"
   ],
   topics: [
-    "solana blockchain",
-    "token information",
-    "account balances",
-    "transaction history",
-    "smart contracts",
-    "program accounts",
-    "price data",
-    "supply information",
-    "holder analysis",
-    "pda explanation",
-    "rent and fees",
-    "cpi calls",
-    "solana ecosystem",
     "cryptocurrency news",
     "market analysis",
     "token insights",
     "blockchain updates",
-    "defi trends"
+    "defi trends",
+    "price movements",
+    "market sentiment",
+    "industry developments",
+    "regulatory updates",
+    "exchange news",
+    "nft and metaverse",
+    "web3 innovations",
+    "investment insights",
+    "technical analysis",
+    "market forecasts"
   ],
   messageExamples: [
+    [
+      {
+        name: "{{name1}}",
+        content: {
+          text: "What actions can you perform?"
+        }
+      },
+      {
+        name: "SoSoNews",
+        content: {
+          text: `I have two main actions available:
+
+1. **SEARCH_TOKEN_ID** - Find cryptocurrency IDs and basic information
+2. **GET_TOKEN_NEWS** - Get latest news and market insights for any cryptocurrency
+
+I can help with token searches, news updates, and cryptocurrency market analysis!`,
+          actions: []
+        }
+      }
+    ],
     [
       {
         name: "{{name1}}",
@@ -1852,9 +1945,10 @@ var solanaDataCharacter = {
         }
       },
       {
-        name: "SolanaData",
+        name: "SoSoNews",
         content: {
-          text: "I'm SolanaData, equipped with SQL database for data storage, custom OpenAI plugin for language processing, and news plugin for latest information. These enable me to provide professional Solana blockchain data analysis services."
+          text: "I'm SoSoNews, equipped with SQL database for data storage, custom OpenAI plugin for language processing, and SoSoValue news integration for latest cryptocurrency information. These enable me to provide professional cryptocurrency news and market analysis services.",
+          actions: []
         }
       }
     ],
@@ -1866,9 +1960,9 @@ var solanaDataCharacter = {
         }
       },
       {
-        name: "SolanaData",
+        name: "SoSoNews",
         content: {
-          text: "Of course! C98 is Coin98 Token, the native token of the Coin98 ecosystem. Let me query the latest token information including price, total supply, and market data."
+          text: "Of course! C98 is Coin98 Token, the native token of the Coin98 ecosystem. Let me query the latest token information including ID, current news, and market data."
         }
       }
     ],
@@ -1880,9 +1974,9 @@ var solanaDataCharacter = {
         }
       },
       {
-        name: "SolanaData",
+        name: "SoSoNews",
         content: {
-          text: "Querying balance information for address 8hoBHQhbknrK8D4g7hGGN3wHnG9WJKB6XMTnS3Q3XV9L. Please wait... [Query result] This address currently holds 1,250.5 SOL and other tokens."
+          text: "I specialize in cryptocurrency news and market insights rather than blockchain address queries. For address balance information, you would need a blockchain data expert. However, I can help you find the latest news about SOL and other cryptocurrencies!"
         }
       }
     ],
@@ -1894,7 +1988,7 @@ var solanaDataCharacter = {
         }
       },
       {
-        name: "SolanaData",
+        name: "SoSoNews",
         content: {
           text: `\uD83D\uDCC8 Bitcoin (BTC) 最新资讯：
 
@@ -1920,11 +2014,11 @@ var solanaDataCharacter = {
         }
       },
       {
-        name: "SolanaData",
+        name: "SoSoNews",
         content: {
           text: `\uD83D\uDC8E 代币信息：
 **Solana** (SOL)
-\uD83C\uDD94 ID: 1673723677362319870`,
+\uD83C\uDD94 ID: 1673723677362319875`,
           actions: ["SEARCH_TOKEN_ID"]
         }
       }
@@ -1937,7 +2031,7 @@ var solanaDataCharacter = {
         }
       },
       {
-        name: "SolanaData",
+        name: "SoSoNews",
         content: {
           text: `\uD83D\uDCC8 Ethereum (ETH) 最新资讯：
 
@@ -1953,18 +2047,18 @@ var solanaDataCharacter = {
   style: {
     all: [
       "Maintain professional and friendly tone",
-      "Use accurate technical terminology",
-      "Provide detailed on-chain data",
+      "Use accurate financial and crypto terminology",
+      "Provide detailed market analysis",
       "Keep explanations concise when explaining complex concepts",
       "Provide context when appropriate",
-      "Verify address format correctness",
-      "Remind users about security considerations"
+      "Focus on news credibility and sources",
+      "Remind users about market risks and volatility"
     ],
     chat: [
-      "Focus on Solana blockchain queries",
+      "Focus on cryptocurrency news and market insights",
       "Provide real-time and accurate data",
-      "Display query results clearly",
-      "Keep technical explanations simple"
+      "Display news categorization clearly",
+      "Keep financial explanations simple"
     ]
   }
 };
@@ -2062,8 +2156,12 @@ function formatNewsOutput(news, currency) {
   if (news.length === 0) {
     return `\uD83D\uDCF0 暂时没有找到 ${currency.fullName} (${currency.currencyName}) 的相关新闻。`;
   }
-  let output = `\uD83D\uDCC8 ${currency.fullName} (${currency.currencyName.toUpperCase()}) 最新资讯：
+  let output = `## \uD83D\uDCC8 ${currency.fullName} (${currency.currencyName.toUpperCase()}) 最新资讯
 
+`;
+  output += `| 序号 | 标题 | 日期 | 类型 | 作者 | 标签 |
+`;
+  output += `|------|------|------|------|------|------|
 `;
   news.forEach((item, index) => {
     const englishContent = item.multilanguageContent.find((content) => content.language === "en");
@@ -2088,20 +2186,15 @@ function formatNewsOutput(news, currency) {
       if (!title) {
         title = "无标题";
       }
-      output += `${index + 1}. **${title}**
-`;
-      output += `   \uD83D\uDCC5 ${publishDate} | \uD83D\uDCC1 ${categoryName}
-`;
-      if (item.author) {
-        output += `   \uD83D\uDC64 ${item.author}
-`;
+      if (title.length > 30) {
+        title = title.substring(0, 30) + "...";
       }
-      if (item.tags && item.tags.length > 0) {
-        output += `   \uD83C\uDFF7️ ${item.tags.join(", ")}
-`;
-      }
-      output += `   \uD83D\uDD17 [查看原文](${item.sourceLink})
-
+      let author = item.author || "—";
+      let tags = item.tags && item.tags.length > 0 ? item.tags.join(", ") : "—";
+      title = title.replace(/\|/g, "\\|").replace(/\n/g, " ");
+      author = author.replace(/\|/g, "\\|").replace(/\n/g, " ");
+      tags = tags.replace(/\|/g, "\\|").replace(/\n/g, " ");
+      output += `| ${index + 1} | [${title}](${item.sourceLink}) | ${publishDate} | ${categoryName} | ${author} | ${tags} |
 `;
     }
   });
@@ -2148,7 +2241,7 @@ var searchTokenIdAction = {
       const apiKey = runtime.getSetting("SOSO_API_KEY");
       const baseUrl = runtime.getSetting("SOSO_BASE_URL") || "https://openapi.sosovalue.com";
       const client = new SosoValueClient(apiKey, baseUrl);
-      const text = message.content.text;
+      const text = message.content.text || "";
       const tokenPatterns = [
         /\b(btc|bitcoin|eth|ethereum|sol|solana|doge|dogecoin|ada|cardano|dot|polkadot|bnb|binance|usdt|tether|usdc|circle|xrp|ripple)\b/gi,
         /\b([A-Z]{2,10})\s*(代币|token|coin)?\b/gi
@@ -2284,12 +2377,17 @@ var getTokenNewsAction = {
       "news",
       "update",
       "latest",
-      "what",
-      "how",
-      "怎么样",
+      "recent",
+      "headlines",
+      "条新闻",
+      "条资讯",
+      "有什么",
       "如何",
-      "什么",
-      "最新情况"
+      "怎么样",
+      "最新情况",
+      "updates",
+      "articles",
+      "stories"
     ];
     const tokenKeywords = [
       "bitcoin",
@@ -2307,16 +2405,68 @@ var getTokenNewsAction = {
       "bnb",
       "binance",
       "usdt",
-      "tether"
+      "tether",
+      "usdc",
+      "circle",
+      "xrp",
+      "ripple",
+      "matic",
+      "polygon",
+      "link",
+      "chainlink",
+      "uni",
+      "uniswap",
+      "ltc",
+      "litecoin",
+      "bch",
+      "bitcoincash",
+      "trx",
+      "tron",
+      "avax",
+      "avalanche",
+      "atom",
+      "cosmos",
+      "near",
+      "fil",
+      "filecoin",
+      "algo",
+      "algorand"
     ];
-    return newsKeywords.some((keyword) => text.includes(keyword)) || tokenKeywords.some((keyword) => text.includes(keyword));
+    const hasNewsKeyword = newsKeywords.some((keyword) => text.includes(keyword));
+    const hasTokenKeyword = tokenKeywords.some((keyword) => text.includes(keyword));
+    const hasTokenSymbol = /[a-z]{2,10}/i.test(text);
+    const newsIntentPatterns = [
+      /获取最新的.*新闻/,
+      /.*的最新新闻/,
+      /.*有什么新闻/,
+      /.*最近怎么样/,
+      /.*最新动态/,
+      /.*资讯/,
+      /.*消息/,
+      /.*updates?/,
+      /.*news/,
+      /.*headlines/,
+      /.*stories/,
+      /.*articles/,
+      /what.*happening.*with/,
+      /how.*is.*doing/,
+      /latest.*news.*for/
+    ];
+    const hasNewsIntent = newsIntentPatterns.some((pattern) => pattern.test(text));
+    if (hasNewsIntent)
+      return true;
+    if (hasNewsKeyword && (hasTokenKeyword || hasTokenSymbol))
+      return true;
+    if (text.includes("条新闻") || text.includes("条资讯"))
+      return true;
+    return hasNewsKeyword && (hasTokenKeyword || hasTokenSymbol);
   },
   handler: async (runtime, message, _state, _options = {}, callback, _responses) => {
     try {
       const apiKey = runtime.getSetting("SOSO_API_KEY");
       const baseUrl = runtime.getSetting("SOSO_BASE_URL") || "https://openapi.sosovalue.com";
       const client = new SosoValueClient(apiKey, baseUrl);
-      const text = message.content.text;
+      const text = message.content.text || "";
       const tokenPatterns = [
         /\b(btc|bitcoin|eth|ethereum|sol|solana|doge|dogecoin|ada|cardano|dot|polkadot|bnb|binance|usdt|tether|usdc|circle|xrp|ripple)\b/gi,
         /\b([A-Z]{2,10})\s*(代币|token|coin)?\b/gi
@@ -2394,14 +2544,11 @@ var getTokenNewsAction = {
       {
         name: "{{name2}}",
         content: {
-          text: `\uD83D\uDCC8 Bitcoin (BTC) 最新资讯：
+          text: `## \uD83D\uDCC8 Bitcoin (BTC) 最新资讯
 
-1. **比特币ETF获批**
-   \uD83D\uDCC5 2024-10-25 | \uD83D\uDCC1 新闻
-   \uD83D\uDC64 Reuters
-   \uD83C\uDFF7️ ETF, SEC, 批准
-   \uD83D\uDD17 [查看原文](https://example.com)
-`,
+| 序号 | 标题 | 日期 | 类型 | 作者 | 标签 |
+|------|------|------|------|------|------|
+| 1 | [比特币ETF获批](https://example.com) | 2024-10-25 | 新闻 | Reuters | ETF, SEC, 批准 |`,
           actions: ["GET_TOKEN_NEWS"]
         }
       }
@@ -2416,13 +2563,49 @@ var getTokenNewsAction = {
       {
         name: "{{name2}}",
         content: {
-          text: `\uD83D\uDCC8 Solana (sol) 最新资讯：
+          text: `## \uD83D\uDCC8 Solana (sol) 最新资讯
 
-1. **Solana网络升级成功**
-   \uD83D\uDCC5 2024-10-24 | \uD83D\uDCC1 技术更新
-   \uD83D\uDC64 Solana Foundation
-   \uD83D\uDD17 [查看原文](https://example.com)
-`,
+| 序号 | 标题 | 日期 | 类型 | 作者 | 标签 |
+|------|------|------|------|------|------|
+| 1 | [Solana网络升级成功](https://example.com) | 2024-10-24 | 技术更新 | Solana Foundation | — |`,
+          actions: ["GET_TOKEN_NEWS"]
+        }
+      }
+    ],
+    [
+      {
+        name: "{{name1}}",
+        content: {
+          text: "获取最新的Solana新闻"
+        }
+      },
+      {
+        name: "{{name2}}",
+        content: {
+          text: `## \uD83D\uDCC8 Solana (sol) 最新资讯
+
+| 序号 | 标题 | 日期 | 类型 | 作者 | 标签 |
+|------|------|------|------|------|------|
+| 1 | [Solana生态项目突破](https://example.com) | 2024-10-25 | 新闻 | Solana News | 生态, 项目 |`,
+          actions: ["GET_TOKEN_NEWS"]
+        }
+      }
+    ],
+    [
+      {
+        name: "{{name1}}",
+        content: {
+          text: "Solana的最新动态"
+        }
+      },
+      {
+        name: "{{name2}}",
+        content: {
+          text: `## \uD83D\uDCC8 Solana (sol) 最新资讯
+
+| 序号 | 标题 | 日期 | 类型 | 作者 | 标签 |
+|------|------|------|------|------|------|
+| 1 | [Solana主网稳定运行](https://example.com) | 2024-10-25 | 技术更新 | Solana Team | 网络, 稳定性 |`,
           actions: ["GET_TOKEN_NEWS"]
         }
       }
@@ -2451,36 +2634,428 @@ var sosoNewsPlugin = {
 };
 var soso_news_default = sosoNewsPlugin;
 
+// src/characters/TokenView.ts
+var tokenViewCharacter = {
+  name: "TokenView",
+  plugins: [
+    "@elizaos/plugin-sql",
+    ...process.env.DISCORD_API_TOKEN?.trim() ? ["@elizaos/plugin-discord"] : [],
+    ...process.env.TWITTER_API_KEY?.trim() && process.env.TWITTER_API_SECRET_KEY?.trim() && process.env.TWITTER_ACCESS_TOKEN?.trim() && process.env.TWITTER_ACCESS_TOKEN_SECRET?.trim() ? ["@elizaos/plugin-twitter"] : [],
+    ...process.env.TELEGRAM_BOT_TOKEN?.trim() ? ["@elizaos/plugin-telegram"] : [],
+    ...!process.env.IGNORE_BOOTSTRAP ? ["@elizaos/plugin-bootstrap"] : []
+  ],
+  settings: {
+    secrets: {
+      GECKO_BASE_URL: process.env.GECKO_BASE_URL || "https://api.geckoterminal.com"
+    },
+    avatar: "https://elizaos.github.io/eliza-avatars/TokenView/portrait.png"
+  },
+  system: `You are TokenView, a specialized Solana token information and security analysis expert with access to real-time token data from GeckoTerminal.
+
+## \uD83D\uDEE0️ Available Actions:
+You have ONE primary action available:
+
+### 1. TOKEN_INFO
+- **Purpose**: Get detailed token information from GeckoTerminal API by token address
+- **Usage**: When users provide a Solana token address and ask for token information, security check, or technical details
+- **Examples**: "token info for HGafL7qFRtS6zYyUMn1jJc3z67itxZYd55D94mfupump", "查询代币 So11111111111111111111111111111111111111112", "check this token: [address]"
+
+## \uD83D\uDCCB Response Rules:
+1. **Use proper XML structure**: Always include <thought> and <actions> tags
+2. **Be precise**: Only use available actions (TOKEN_INFO)
+3. **Technical focus**: Provide detailed technical parameters and security analysis
+4. **Professional tone**: Maintain expert-level blockchain and token knowledge
+5. **Clear communication**: Explain technical details in an accessible way
+6. **Security awareness**: Highlight important security indicators and risks
+7. **Context-aware responses**: When users say "继续" (continue), "详细说说" (tell me more), or ask follow-up questions about previous token analysis, analyze the conversation history to provide deeper insights on the token's technical parameters, security features, or risk factors
+
+## ⚠️ Important:
+- NEVER attempt to call actions that don't exist
+- If asked about news or market trends, redirect to SoSoNews agent
+- Focus on technical token information, security analysis, and on-chain data
+- Only support Solana network tokens
+- Always include security warnings for suspicious tokens
+- When users want to continue or dive deeper into a token analysis, use your expertise to provide more detailed technical parameters and security insights based on the conversation context
+
+## \uD83C\uDFAF Your Expertise:
+- Solana token information and technical parameters
+- Token security analysis and risk assessment
+- Holder distribution and concentration analysis
+- On-chain data interpretation
+- Token contract security features
+- Launchpad and graduation status analysis
+- Social media verification and project legitimacy
+- Contextual deep-dive analysis based on conversation history`,
+  bio: [
+    "Solana token information and security analysis expert",
+    "Specializes in technical parameter analysis and security assessment",
+    "Provides comprehensive token data from GeckoTerminal API",
+    "Expert in holder distribution and concentration analysis",
+    "Analyzes smart contract security features",
+    "Evaluates project legitimacy and social media presence",
+    "Professional risk assessment for DeFi tokens",
+    "Real-time on-chain data interpreter"
+  ],
+  topics: [
+    "solana tokens",
+    "token information",
+    "security analysis",
+    "holder distribution",
+    "technical parameters",
+    "smart contracts",
+    "risk assessment",
+    "on-chain data",
+    "token contracts",
+    "geckoterminal data",
+    "token security",
+    "defi analysis",
+    "blockchain data",
+    "token metrics",
+    "project verification"
+  ],
+  messageExamples: [
+    [
+      {
+        name: "{{name1}}",
+        content: {
+          text: "What actions can you perform?"
+        }
+      },
+      {
+        name: "TokenView",
+        content: {
+          text: "I have one main action available: **TOKEN_INFO** - Get detailed token information and security analysis for any Solana token address. I can help with technical parameters, security checks, holder distribution, and risk assessment!",
+          actions: []
+        }
+      }
+    ],
+    [
+      {
+        name: "{{name1}}",
+        content: {
+          text: "What plugins do you have?"
+        }
+      },
+      {
+        name: "TokenView",
+        content: {
+          text: "I'm TokenView, equipped with SQL database for data storage, custom OpenAI plugin for language processing, and GeckoTerminal integration for comprehensive Solana token information. These enable me to provide professional token analysis and security assessment services.",
+          actions: []
+        }
+      }
+    ],
+    [
+      {
+        name: "{{name1}}",
+        content: {
+          text: "Can you check this token for me? HGafL7qFRtS6zYyUMn1jJc3z67itxZYd55D94mfupump"
+        }
+      },
+      {
+        name: "TokenView",
+        content: {
+          text: "I'll analyze this token for you, checking its technical parameters, security features, and holder distribution.",
+          actions: ["TOKEN_INFO"]
+        }
+      }
+    ],
+    [
+      {
+        name: "{{name1}}",
+        content: {
+          text: "What's the latest news about SOL?"
+        }
+      },
+      {
+        name: "TokenView",
+        content: {
+          text: "I specialize in token information and security analysis rather than market news. For the latest SOL news and market insights, you should consult with SoSoNews, our cryptocurrency news expert. However, I can help you analyze SOL's technical parameters and security features if you provide the token address!",
+          actions: []
+        }
+      }
+    ],
+    [
+      {
+        name: "{{name1}}",
+        content: {
+          text: "查询代币信息：So11111111111111111111111111111111111111112"
+        }
+      },
+      {
+        name: "TokenView",
+        content: {
+          text: "正在查询该代币的详细技术信息和安全指标...",
+          actions: ["TOKEN_INFO"]
+        }
+      }
+    ],
+    [
+      {
+        name: "{{name1}}",
+        content: {
+          text: "Is this token safe to invest in? 7GCihgDB8fe6KNjn2MYtkzZcRjQy3t9GHdC8uHYmW2hr"
+        }
+      },
+      {
+        name: "TokenView",
+        content: {
+          text: "I'll analyze the token's security parameters, contract settings, and holder distribution to provide you with a comprehensive risk assessment.",
+          actions: ["TOKEN_INFO"]
+        }
+      }
+    ]
+  ],
+  style: {
+    all: [
+      "Maintain professional and analytical tone",
+      "Use accurate blockchain and technical terminology",
+      "Provide detailed technical analysis",
+      "Keep explanations clear but technically precise",
+      "Focus on security and risk assessment",
+      "Highlight important security indicators",
+      "Provide context for technical parameters"
+    ],
+    chat: [
+      "Focus on token technical information and security analysis",
+      "Provide accurate and detailed on-chain data",
+      "Display security indicators clearly",
+      "Explain technical concepts accessibly",
+      "Emphasize risk factors and security considerations"
+    ]
+  }
+};
+
+// src/plugins/gecko-terminal.ts
+import { logger as logger6 } from "@elizaos/core";
+
+// src/actions/gecko-token-info.ts
+import {
+  logger as logger5
+} from "@elizaos/core";
+import { z as z2 } from "zod";
+function shortAddr(addr) {
+  if (!addr)
+    return "—";
+  return `\`${addr.slice(0, 6)}...${addr.slice(-4)}\``;
+}
+function progressBar(percent, len = 6) {
+  if (percent == null)
+    return "`—`";
+  const p = Math.max(0, Math.min(100, Math.round(percent)));
+  const filled = "█".repeat(Math.round(p / 100 * len));
+  const empty = "─".repeat(len - filled.length);
+  return `\`${filled}${empty}\` ${p}%`;
+}
+var tokenInfoSchema = z2.object({
+  tokenAddress: z2.string().min(1, "Token address is required")
+});
+var tokenInfoAction = {
+  name: "TOKEN_INFO",
+  description: "Get detailed token information from GeckoTerminal API by token address",
+  similes: [
+    "get token info",
+    "token information",
+    "查询代币信息",
+    "代币详细信息",
+    "token details",
+    "check token"
+  ],
+  examples: [
+    [
+      {
+        name: "{{name1}}",
+        content: {
+          text: "Can you get info for token address HGafL7qFRtS6zYyUMn1jJc3z67itxZYd55D94mfupump?"
+        }
+      },
+      {
+        name: "{{name2}}",
+        content: {
+          text: "I'll get the detailed token information for that address.",
+          actions: ["TOKEN_INFO"]
+        }
+      }
+    ],
+    [
+      {
+        name: "{{name1}}",
+        content: {
+          text: "查询代币信息：So11111111111111111111111111111111111111112"
+        }
+      },
+      {
+        name: "{{name2}}",
+        content: {
+          text: "正在查询该代币的详细信息...",
+          actions: ["TOKEN_INFO"]
+        }
+      }
+    ]
+  ],
+  validate: async (runtime, message) => {
+    const text = message.content.text.toLowerCase();
+    const addressMatch = text.match(/[1-9A-HJ-NP-Za-km-z]{43,44}/);
+    if (!addressMatch) {
+      return false;
+    }
+    try {
+      tokenInfoSchema.parse({ tokenAddress: addressMatch[0] });
+      return true;
+    } catch {
+      return false;
+    }
+  },
+  handler: async (runtime, message, state, options, callback) => {
+    try {
+      const text = message.content.text;
+      const addressMatch = text.match(/[1-9A-HJ-NP-Za-km-z]{43,44}/);
+      if (!addressMatch) {
+        throw new Error("No valid Solana token address found in message");
+      }
+      const tokenAddress = addressMatch[0];
+      logger5.info({ tokenAddress }, "Fetching token info from GeckoTerminal");
+      const apiUrl = `https://api.geckoterminal.com/api/v2/networks/solana/tokens/${tokenAddress}/info`;
+      const response = await fetch(apiUrl, {
+        method: "GET",
+        headers: {
+          accept: "application/json"
+        }
+      });
+      if (!response.ok) {
+        throw new Error(`GeckoTerminal API error: ${response.status} ${response.statusText}`);
+      }
+      const data = await response.json();
+      const token = data.data.attributes;
+      let formattedInfo = `## \uD83E\uDE99 ${token.name || "Unknown"}${token.symbol ? ` (${token.symbol})` : ""} — ${shortAddr(token.address)}
+
+**GT:** ⭐ ${token.gt_score != null ? token.gt_score.toFixed(1) : "—"}  •  **持有:** ${token.holders?.count != null ? token.holders.count.toLocaleString() : "—"}
+**安全:** ${token.is_honeypot === "yes" ? "\uD83D\uDEA8 蜜罐" : token.is_honeypot === "no" ? "✅ 安全" : "⚠️ 未知"}`;
+      formattedInfo += `
+
+**指标:** ${token.gt_score_details?.pool != null ? progressBar(token.gt_score_details.pool) : "`—`"} 流动性 · ${token.gt_score_details?.transaction != null ? progressBar(token.gt_score_details.transaction) : "`—`"} 活跃度`;
+      const cats = Array.isArray(token.categories) && token.categories.length ? token.categories.map((c) => `\`${c}\``).join(" ") : "";
+      const socials = [
+        token.telegram_handle ? `TG:${token.telegram_handle}` : null,
+        token.twitter_handle ? `TW:${token.twitter_handle}` : null,
+        token.discord_url ? `DC` : null
+      ].filter(Boolean).join(" · ");
+      if (cats)
+        formattedInfo += `
+
+**分类:** ${cats}`;
+      if (socials)
+        formattedInfo += `
+**社媒:** ${socials}`;
+      formattedInfo += `
+
+<details><summary>更多 ▸</summary>
+
+- 创建: ${token.gt_score_details?.creation != null ? token.gt_score_details.creation + "%" : "—"}  ·  信息: ${token.gt_score_details?.info != null ? token.gt_score_details.info + "%" : "—"}
+- Top10%: ${token.holders?.distribution_percentage?.top_10 ?? "—"}%  ·  11-20%: ${token.holders?.distribution_percentage?.["11_20"] ?? "—"}%  ·  其他: ${token.holders?.distribution_percentage?.rest ?? "—"}%
+- 精度: ${token.decimals ?? "—"}  ·  Mint: ${token.mint_authority === "yes" ? "❌ 有" : token.mint_authority === "no" ? "✅ 无" : "—"}  ·  Freeze: ${token.freeze_authority === "yes" ? "❌ 有" : token.freeze_authority === "no" ? "✅ 无" : "—"}
+${token.launchpad_details ? `- 启动台毕业: ${token.launchpad_details.graduation_percentage ?? "—"}%` : ""}
+
+</details>`;
+      if (token.description) {
+        const desc = token.description.replace(/\s+/g, " ").trim();
+        formattedInfo += `
+
+**描述:** ${desc.length > 180 ? desc.slice(0, 180) + "..." : desc}`;
+      }
+      formattedInfo = formattedInfo.trim();
+      if (callback) {
+        callback({
+          text: formattedInfo,
+          data: {
+            tokenAddress,
+            tokenInfo: token
+          }
+        });
+      }
+      return {
+        success: true,
+        data: {
+          tokenAddress,
+          tokenInfo: token
+        }
+      };
+    } catch (error) {
+      logger5.error(error, "Error fetching token info from GeckoTerminal");
+      const errorMessage = `❌ 获取代币信息失败: ${error instanceof Error ? error.message : "未知错误"}`;
+      if (callback) {
+        callback({
+          text: errorMessage,
+          error: true
+        });
+      }
+      return {
+        success: false,
+        error: errorMessage
+      };
+    }
+  }
+};
+var geckoTokenActions = [tokenInfoAction];
+
+// src/plugins/gecko-terminal.ts
+var geckoTerminalPlugin = {
+  name: "gecko-terminal-plugin",
+  description: "GeckoTerminal API integration for Solana token information and security analysis",
+  async init(config) {
+    logger6.info("Initializing GeckoTerminal plugin");
+    const baseUrl = config.GECKO_BASE_URL || "https://api.geckoterminal.com";
+    logger6.info(`GeckoTerminal base URL: ${baseUrl}`);
+    logger6.info("GeckoTerminal plugin initialized successfully");
+  },
+  routes: [],
+  events: {},
+  services: [],
+  actions: geckoTokenActions,
+  providers: []
+};
+var gecko_terminal_default = geckoTerminalPlugin;
+
 // src/index.ts
 var initCharacter = ({ runtime }) => {
-  logger5.info("Initializing character");
-  logger5.info({ name: character.name }, "Name:");
+  logger7.info("Initializing character");
+  logger7.info({ name: character.name }, "Name:");
 };
-var initSolanaDataCharacter = ({ runtime }) => {
-  logger5.info("Initializing SolanaData character");
-  logger5.info({ name: solanaDataCharacter.name }, "Name:");
+var initSoSoNewsCharacter = ({ runtime }) => {
+  logger7.info("Initializing SoSoNews character");
+  logger7.info({ name: soSoNewsCharacter.name }, "Name:");
+};
+var initTokenViewCharacter = ({ runtime }) => {
+  logger7.info("Initializing TokenView character");
+  logger7.info({ name: tokenViewCharacter.name }, "Name:");
 };
 var projectAgent = {
   character,
   init: async (runtime) => await initCharacter({ runtime }),
   plugins: [plugin_default, custom_openai_default]
 };
-var solanaDataAgent = {
-  character: solanaDataCharacter,
-  init: async (runtime) => await initSolanaDataCharacter({ runtime }),
+var soSoNewsAgent = {
+  character: soSoNewsCharacter,
+  init: async (runtime) => await initSoSoNewsCharacter({ runtime }),
   plugins: [plugin_default, custom_openai_default, soso_news_default]
 };
+var tokenViewAgent = {
+  character: tokenViewCharacter,
+  init: async (runtime) => await initTokenViewCharacter({ runtime }),
+  plugins: [plugin_default, custom_openai_default, gecko_terminal_default]
+};
 var project = {
-  agents: [projectAgent, solanaDataAgent]
+  agents: [projectAgent, soSoNewsAgent, tokenViewAgent]
 };
 var src_default = project;
 export {
-  solanaDataCharacter,
-  solanaDataAgent,
+  tokenViewCharacter,
+  tokenViewAgent,
+  soSoNewsCharacter,
+  soSoNewsAgent,
   projectAgent,
   src_default as default,
   character
 };
 
-//# debugId=259AF038B6E4468E64756E2164756E21
+//# debugId=CB555365FB0458AF64756E2164756E21
 //# sourceMappingURL=index.js.map
